@@ -1,1 +1,971 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MEDIETV | Premium Kino, Anime & Serial Platformasi</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
+    <style>
+        /* CSS O'zgaruvchilari */
+        :root {
+            --color-primary: #e50914; /* Netflix Red */
+            --color-background-dark: #141414;
+            --color-surface-dark: #1c1c1c;
+            --color-surface-light: #2c2c2c;
+            --color-text-light: #ffffff;
+            --color-text-muted: #aaaaaa;
+            --color-accent-blue: #007bff;
+            --color-green: #38a169;
+            --color-danger: #dc3545;
+            --spacing-md: 1.5rem;
+            --border-radius: 6px;
+        }
+
+        /* Global & Responsive Reset */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            /* Old school mobile zoom prevention, complemented by viewport tag */
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+            touch-action: manipulation;
+        }
+
+        body.dark-mode {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: var(--color-background-dark);
+            color: var(--color-text-light);
+            line-height: 1.6;
+        }
+
+        a {
+            color: var(--color-text-light);
+            text-decoration: none;
+        }
+
+        button {
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        main {
+            padding-top: 80px; /* Sticky header uchun joy */
+        }
+
+        /* --- 1. Sticky Navigation (Frontend & Admin Toggle) --- */
+        .sticky-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: rgba(20, 20, 20, 0.98);
+            padding: 0.8rem var(--spacing-md);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--color-primary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            white-space: nowrap;
+        }
+
+        .main-menu {
+            display: flex;
+            gap: 20px;
+        }
+
+        .main-menu a {
+            font-size: 1rem;
+            padding: 5px 0;
+            color: var(--color-text-muted);
+        }
+        .main-menu a.active, .main-menu a:hover {
+            color: var(--color-text-light);
+            border-bottom: 2px solid var(--color-primary);
+        }
+
+        .nav-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        #search-input {
+            background: var(--color-surface-dark);
+            border: 1px solid #444;
+            color: var(--color-text-light);
+            padding: 8px 10px;
+            border-radius: var(--border-radius);
+            width: 180px;
+        }
+
+        .admin-toggle-btn {
+            background-color: var(--color-primary);
+            color: var(--color-text-light);
+            border: none;
+            padding: 8px 15px;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+        }
+        .admin-toggle-btn:hover {
+            background-color: #c40812;
+        }
+
+        /* --- 2. Hero Section --- */
+        .hero-section {
+            background: linear-gradient(rgba(0, 0, 0, 0.7), var(--color-background-dark)), 
+                        url('https://picsum.photos/1600/900?random=1') no-repeat center center/cover;
+            height: 60vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: var(--spacing-md) 4rem;
+        }
+
+        .hero-content h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        /* --- 3. Content Filtering --- */
+        .content-filters {
+            padding: var(--spacing-md) 4rem 0.5rem;
+        }
+
+        .filter-pills {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto; /* Mobil uchun gorizontal skroll */
+            padding-bottom: 10px;
+            -webkit-overflow-scrolling: touch;
+        }
+        .filter-pills::-webkit-scrollbar {
+            display: none; /* Skrollbarnni yashirish */
+        }
+
+        .filter-btn {
+            background-color: var(--color-surface-dark);
+            color: var(--color-text-light);
+            border: 1px solid var(--color-surface-dark);
+            padding: 8px 15px;
+            border-radius: 20px;
+            white-space: nowrap; /* Tugmalarni bir qatorda saqlash */
+        }
+
+        .filter-btn.active {
+            background-color: var(--color-primary);
+            border-color: var(--color-primary);
+            font-weight: 600;
+        }
+
+        /* --- 4. Content Grid (Movie Cards) --- */
+        .content-grid {
+            padding: 1rem 4rem var(--spacing-md);
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .movie-card {
+            background-color: var(--color-surface-dark);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .movie-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.7);
+        }
+
+        .card-poster {
+            height: 280px; 
+            background-size: cover;
+            background-position: center;
+        }
+
+        .card-info {
+            padding: 10px;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .card-metadata {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 5px;
+            font-size: 0.85rem;
+            color: var(--color-text-muted);
+        }
+
+        .rating-badge {
+            color: var(--color-green);
+            font-weight: 700;
+        }
+
+        .quality-text {
+            color: var(--color-accent-blue);
+        }
+
+        /* --- 5. Modal Styling --- */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.95);
+        }
+
+        .modal-content {
+            background-color: var(--color-surface-dark);
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            width: 95%; /* Mobilga moslashish */
+            max-width: 900px;
+        }
+
+        .close-btn {
+            color: var(--color-text-muted);
+            float: right;
+            font-size: 30px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* --- Admin Panel Styling --- */
+        #admin-panel {
+            min-height: 100vh;
+            padding: 2rem;
+            background-color: var(--color-background-dark);
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #333;
+            padding-bottom: 1rem;
+        }
+
+        .admin-nav {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 2rem;
+        }
+
+        .admin-nav-btn {
+            background: none;
+            border: none;
+            color: var(--color-text-muted);
+            font-size: 1.1rem;
+            padding: 10px 15px;
+            border-radius: var(--border-radius);
+        }
+        .admin-nav-btn.active {
+            color: var(--color-text-light);
+            background-color: var(--color-surface-light);
+        }
+        .admin-nav-btn:hover:not(.active) {
+             color: var(--color-text-light);
+        }
+
+        .admin-section {
+            display: none;
+            background-color: var(--color-surface-dark);
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+        }
+        .admin-section.active {
+            display: block;
+        }
+
+        /* Stats Dashboard */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 2rem;
+        }
+
+        .stat-box {
+            background-color: var(--color-surface-light);
+            padding: 20px;
+            border-radius: var(--border-radius);
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--color-primary);
+        }
+
+        .stat-label {
+            font-size: 1rem;
+            color: var(--color-text-muted);
+            text-transform: uppercase;
+            margin-top: 5px;
+        }
+
+        /* Form Styling */
+        .content-form label {
+            display: block;
+            margin-top: 15px;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .content-form input, 
+        .content-form select, 
+        .content-form textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #444;
+            background-color: var(--color-background-dark);
+            color: var(--color-text-light);
+            border-radius: var(--border-radius);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .btn-submit {
+            background-color: var(--color-green);
+            color: var(--color-text-light);
+            padding: 12px 20px;
+            border: none;
+            border-radius: var(--border-radius);
+            margin-top: 20px;
+            font-size: 1.1rem;
+            width: 100%;
+        }
+        .btn-submit:hover {
+            background-color: #2e8b57;
+        }
+
+        /* Content Management Table */
+        .content-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .content-table th, .content-table td {
+            border: 1px solid #333;
+            padding: 10px;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+        .content-table th {
+            background-color: var(--color-surface-light);
+            color: var(--color-primary);
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            color: var(--color-accent-blue);
+            margin-right: 10px;
+            font-size: 1rem;
+        }
+        .action-btn.delete {
+            color: var(--color-danger);
+        }
+
+        /* --- Responsive Adjustments --- */
+        @media (max-width: 992px) {
+            .sticky-nav {
+                padding: 0.8rem 1rem;
+                flex-wrap: wrap;
+            }
+            .main-menu {
+                order: 3;
+                flex-basis: 100%;
+                justify-content: space-around;
+                margin-top: 10px;
+                gap: 10px;
+            }
+            .nav-controls {
+                gap: 0.5rem;
+            }
+            .hero-section {
+                padding: var(--spacing-md) 2rem;
+                height: 40vh;
+            }
+            .hero-content h1 {
+                font-size: 2.5rem;
+            }
+            .content-grid, .content-filters {
+                padding: 1rem 2rem;
+            }
+            .admin-header {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .admin-nav {
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .logo {
+                font-size: 1.5rem;
+            }
+            .main-menu a {
+                font-size: 0.9rem;
+            }
+            .hero-section {
+                height: 35vh;
+            }
+            .content-grid {
+                grid-template-columns: 1fr 1fr; /* Kichikroq ekranlarda 2 ustun */
+                gap: 10px;
+            }
+            .card-poster {
+                height: 200px;
+            }
+            .admin-section {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body class="dark-mode">
+
+    <div id="platform-container">
+        
+        <header id="frontend-header" class="sticky-nav">
+            <div class="logo">MEDIETV</div>
+            <nav class="main-menu">
+                <a href="#" class="active" data-filter="all">Barchasi</a>
+                <a href="#" data-filter="kino">Kinolar</a>
+                <a href="#" data-filter="anime">Anime</a>
+                <a href="#" data-filter="serial">Seriallar</a>
+                <a href="#" data-filter="dramma">Drammalar</a>
+            </nav>
+            <div class="nav-controls">
+                <input type="text" id="search-input" placeholder="Qidiruv..." autocomplete="off">
+                <button class="admin-toggle-btn" id="login-toggle-btn"><i class="fas fa-user-shield"></i> Admin</button>
+            </div>
+        </header>
+
+        <main id="frontend-main">
+            <section class="hero-section">
+                <div class="hero-content">
+                    <h1>Eng Yangi Kontent Faqat MEDIETV'da</h1>
+                    <p>4K sifatli Kino, Anime, Serial va Drammalar dunyosi.</p>
+                </div>
+            </section>
+
+            <section class="content-filters">
+                <h2>Barcha Kontent</h2>
+                <div class="filter-pills" id="main-filter-pills">
+                    </div>
+            </section>
+
+            <section class="content-grid" id="movie-grid">
+                </section>
+        </main>
+    </div>
+
+    <div id="admin-panel" style="display: none;">
+        <div class="admin-header">
+            <div class="logo">ADMIN CMS</div>
+            <button class="admin-toggle-btn" id="logout-toggle-btn"><i class="fas fa-sign-out-alt"></i> Chiqish</button>
+        </div>
+
+        <nav class="admin-nav">
+            <button class="admin-nav-btn active" data-target="dashboard"><i class="fas fa-chart-line"></i> Dashboard</button>
+            <button class="admin-nav-btn" data-target="upload"><i class="fas fa-upload"></i> Kontent Yuklash</button>
+            <button class="admin-nav-btn" data-target="manage"><i class="fas fa-tasks"></i> Kontent Boshqaruvi</button>
+            <button class="admin-nav-btn" data-target="tools"><i class="fas fa-tools"></i> Asboblar</button>
+        </nav>
+
+        <section class="admin-section active" id="admin-dashboard">
+            <h3>📊 Platforma Statistikasi (Real Vaqtda)</h3>
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <span class="stat-value" id="stat-total-movies">0</span>
+                    <span class="stat-label">Jami Kontent</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-value" id="stat-total-views">0</span>
+                    <span class="stat-label">Jami Ko'rishlar</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-value" id="stat-avg-rating">0.0</span>
+                    <span class="stat-label">O'rtacha Baho</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-value" id="stat-4k-count">0</span>
+                    <span class="stat-label">4K Kontent</span>
+                </div>
+            </div>
+            
+            <h4>Toifalar Bo'yicha Statistika</h4>
+            <div class="stats-grid" id="category-stats-grid">
+                </div>
+        </section>
+
+        <section class="admin-section" id="admin-upload">
+            <h3>⬆️ Yangi Kontent Yuklash</h3>
+            <form id="upload-form" class="content-form">
+                <div class="form-grid">
+                    <div>
+                        <label for="upload-type">Kontent Turi (Toifasi):</label>
+                        <select id="upload-type" required>
+                            <option value="">--- Tanlang ---</option>
+                            <option value="kino">Kino</option>
+                            <option value="anime">Anime</option>
+                            <option value="serial">Serial</option>
+                            <option value="dramma">Dramma</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="upload-title">Sarlavha (Nomi):</label>
+                        <input type="text" id="upload-title" required>
+                    </div>
+                </div>
+
+                <label for="upload-description">Tavsif (Description):</label>
+                <textarea id="upload-description" rows="3" required></textarea>
+
+                <div class="form-grid">
+                    <div><label for="upload-poster">Poster URL (Masalan: https://.../poster.jpg):</label><input type="url" id="upload-poster" required></div>
+                    <div><label for="upload-video">Video URL (Masalan: https://youtube.com/embed/...):</label><input type="url" id="upload-video" required></div>
+                    <div><label for="upload-year">Yil:</label><input type="number" id="upload-year" required></div>
+                    <div><label for="upload-duration">Davomiyligi (minutda):</label><input type="number" id="upload-duration" required></div>
+                    <div>
+                        <label for="upload-quality">Sifati:</label>
+                        <select id="upload-quality" required>
+                            <option value="4K">4K Ultra HD</option>
+                            <option value="1080p">HD 1080p</option>
+                            <option value="720p">HD 720p</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="upload-rating">IMDb/Baho (0.0-10.0):</label>
+                        <input type="number" id="upload-rating" min="0" max="10" step="0.1" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn-submit">Kontentni Yuklash</button>
+            </form>
+            <p id="upload-message" class="error-message" style="margin-top: 15px;"></p>
+        </section>
+
+        <section class="admin-section" id="admin-manage">
+            <h3>📝 Kontentni Boshqarish</h3>
+            <p style="margin-bottom: 15px; color: var(--color-text-muted);">Kontentni tahrirlash va o'chirish.</p>
+            <table class="content-table" id="content-management-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nomi</th>
+                        <th>Turi</th>
+                        <th>Baho</th>
+                        <th>Ko'rishlar</th>
+                        <th>Harakatlar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    </tbody>
+            </table>
+        </section>
+
+        <section class="admin-section" id="admin-tools">
+            <h3>🔨 Tizim Asboblari</h3>
+            <p style="margin-bottom: 20px; color: var(--color-text-muted);">Tizimni optimallashtirish va zaxiralash funksiyalari.</p>
+            
+            <h4>Cache va Ma'lumotlar Boshqaruvi</h4>
+            <button class="btn-submit" style="background-color: var(--color-accent-blue); width: 250px; margin-bottom: 10px;" id="cache-clear-btn"><i class="fas fa-eraser"></i> Cache'ni Tozalash</button><br>
+            <button class="btn-submit" style="background-color: #5a5a5a; width: 250px; margin-bottom: 10px;" id="db-backup-btn"><i class="fas fa-database"></i> DB Zaxira Nusxasini Olish</button><br>
+            <button class="btn-submit" style="background-color: var(--color-danger); width: 250px; margin-bottom: 10px;" id="reset-data-btn"><i class="fas fa-exclamation-triangle"></i> Barcha Ma'lumotlarni O'chirish (Xavfli)</button>
+            
+            <h4 style="margin-top: 20px;">Sozlamalar</h4>
+            <div class="stat-box" style="display: flex; justify-content: space-between; align-items: center;">
+                <label>Avtomatik Saqlash Funksiyasi:</label>
+                <input type="checkbox" checked>
+            </div>
+        </section>
+    </div>
+
+    <div id="video-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" id="video-close-btn">&times;</span>
+            <div class="video-container">
+                <iframe id="player-iframe" width="100%" height="450" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+            </div>
+            <h3 id="modal-title"></h3>
+        </div>
+    </div>
+    
+    <div id="login-modal" class="modal">
+        <div class="modal-content admin-form-content">
+            <span class="close-btn" id="login-close-btn">&times;</span>
+            <h3>🔐 Admin Panelga Kirish</h3>
+            <form id="admin-login-form">
+                <input type="password" id="admin-password" placeholder="Parolni kiriting" required>
+                <button type="submit" class="login-submit-btn">Kirish</button>
+                <p id="login-error-message" class="error-message"></p>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        //
+        // MEDIETV Kengaytirilgan JavaScript
+        //
+
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // --- GLOBAL CONSTANTS & SIMULATED DATABASE ---
+            const ADMIN_PASSWORD = '2010';
+            const CATEGORIES = ['all', 'kino', 'anime', 'serial', 'dramma'];
+            let contentDB = [];
+
+fetch("/api/movies")
+    .then(res => res.json())
+    .then(data => {
+        contentDB = data;
+        renderContentCards('all');
+        updateDashboardStats();
+        renderAdminTable();
+    });
+
+
+            // --- DOM ELEMENTS ---
+            const frontendContainer = document.getElementById('platform-container');
+            const adminPanel = document.getElementById('admin-panel');
+            const loginModal = document.getElementById('login-modal');
+            const loginToggleBtn = document.getElementById('login-toggle-btn');
+            const logoutToggleBtn = document.getElementById('logout-toggle-btn');
+            const loginCloseBtn = document.getElementById('login-close-btn');
+            const adminLoginForm = document.getElementById('admin-login-form');
+            const adminPasswordInput = document.getElementById('admin-password');
+            const loginErrorMessage = document.getElementById('login-error-message');
+            
+            const movieGrid = document.getElementById('movie-grid');
+            const adminNavBtns = document.querySelectorAll('.admin-nav-btn');
+            const uploadForm = document.getElementById('upload-form');
+            const contentTableBody = document.querySelector('#content-management-table tbody');
+            const videoModal = document.getElementById('video-modal');
+            const videoCloseBtn = document.getElementById('video-close-btn');
+            const playerIframe = document.getElementById('player-iframe');
+            const modalTitle = document.getElementById('modal-title');
+
+            // --- UTILITY FUNCTIONS ---
+            
+            // Ma'lumotlar bazasini local storage'ga saqlash
+            const saveDB = () => {
+                localStorage.setItem('medie_content_db', JSON.stringify(contentDB));
+            };
+
+            // Kontentni Tahrirlash/O'chirish (DELETE)
+            const deleteContent = (id) => {
+
+    fetch("/api/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id })
+    })
+    .then(res => res.json())
+    .then(() => {
+        contentDB = contentDB.filter(content => content.id !== id);
+        renderContentCards('all');
+        renderAdminTable();
+        updateDashboardStats();
+    });
+};
+
+
+            // Video pleerni ishga tushirish (URL orqali)
+            const openVideoPlayer = (title, videoUrl) => {
+                modalTitle.textContent = title;
+                playerIframe.src = videoUrl;
+                videoModal.style.display = 'block';
+            };
+
+            const closeVideoPlayer = () => {
+                videoModal.style.display = 'none';
+                playerIframe.src = '';
+            };
+
+            // --- RENDER FUNCTIONS ---
+
+            // 1. Kontent kartalarini Frontendda chizish
+            const renderContentCards = (filter = 'all') => {
+                movieGrid.innerHTML = '';
+                
+                const filteredContent = filter === 'all'
+                    ? contentDB
+                    : contentDB.filter(item => item.type === filter);
+
+                if (filteredContent.length === 0) {
+                    movieGrid.innerHTML = `<p style="grid-column: 1 / -1; color: var(--color-text-muted); text-align: center; padding: 50px;">Afsuski, ushbu toifada kontent topilmadi.</p>`;
+                    return;
+                }
+
+                filteredContent.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = 'movie-card';
+                    card.innerHTML = `
+                        <div class="card-poster" style="background-image: url('${item.posterUrl}')"></div>
+                        <div class="card-info">
+                            <h3 class="card-title">${item.title}</h3>
+                            <div class="card-metadata">
+                                <span class="rating-badge"><i class="fas fa-star"></i> ${item.rating}</span>
+                                <span class="quality-text">${item.quality}</span>
+                                <span>${item.year} | ${item.type.charAt(0).toUpperCase() + item.type.slice(1)}</span>
+                            </div>
+                        </div>
+                    `;
+                    card.addEventListener('click', () => {
+                        // Ko'rishlar sonini oshirish (real vaqtda simulyatsiya)
+                        item.views += 1;
+                        saveDB();
+                        updateDashboardStats();
+                        openVideoPlayer(item.title, item.videoUrl);
+                    });
+                    movieGrid.appendChild(card);
+                });
+            };
+
+            // 2. Admin Boshqaruv jadvalini chizish
+            const renderAdminTable = () => {
+                contentTableBody.innerHTML = '';
+                contentDB.sort((a, b) => b.id - a.id).forEach(item => {
+                    const row = contentTableBody.insertRow();
+                    row.innerHTML = `
+                        <td>${item.id}</td>
+                        <td>${item.title}</td>
+                        <td>${item.type.charAt(0).toUpperCase() + item.type.slice(1)}</td>
+                        <td>${item.rating}</td>
+                        <td>${item.views.toLocaleString()}</td>
+                        <td>
+                            <button class="action-btn view-btn" data-id="${item.id}" title="Ko'rish"><i class="fas fa-eye"></i></button>
+                            <button class="action-btn delete delete-btn" data-id="${item.id}" title="O'chirish"><i class="fas fa-trash-alt"></i></button>
+                        </td>
+                    `;
+                });
+
+                // Harakat tugmalariga event listener qo'shish
+                contentTableBody.querySelectorAll('.view-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const id = parseInt(e.currentTarget.getAttribute('data-id'));
+                        const item = contentDB.find(c => c.id === id);
+                        if (item) {
+                            openVideoPlayer(`Admin Ko'rish: ${item.title}`, item.videoUrl);
+                        }
+                    });
+                });
+
+                contentTableBody.querySelectorAll('.delete-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const id = parseInt(e.currentTarget.getAttribute('data-id'));
+                        if (confirm(`Rostdan ham ID: ${id} bo'lgan kontentni o'chirmoqchimisiz?`)) {
+                            deleteContent(id);
+                        }
+                    });
+                });
+            };
+
+            // 3. Admin Dashboard Statistikalarni yangilash (Real Vaqtda)
+            const updateDashboardStats = () => {
+                const totalMovies = contentDB.length;
+                const totalViews = contentDB.reduce((sum, item) => sum + item.views, 0);
+                const totalRating = contentDB.reduce((sum, item) => sum + item.rating, 0);
+                const avgRating = totalMovies > 0 ? (totalRating / totalMovies).toFixed(1) : '0.0';
+                const count4K = contentDB.filter(item => item.quality === '4K').length;
+
+                document.getElementById('stat-total-movies').textContent = totalMovies.toLocaleString();
+                document.getElementById('stat-total-views').textContent = (totalViews / 1000).toFixed(1) + 'K';
+                document.getElementById('stat-avg-rating').textContent = avgRating;
+                document.getElementById('stat-4k-count').textContent = count4K.toLocaleString();
+
+                // Toifalar bo'yicha statistika
+                const categoryStatsGrid = document.getElementById('category-stats-grid');
+                categoryStatsGrid.innerHTML = '';
+
+                const categoryCounts = CATEGORIES.reduce((acc, cat) => {
+                    if (cat !== 'all') acc[cat] = contentDB.filter(item => item.type === cat).length;
+                    return acc;
+                }, {});
+
+                Object.keys(categoryCounts).forEach(cat => {
+                    const box = document.createElement('div');
+                    box.className = 'stat-box';
+                    box.innerHTML = `
+                        <span class="stat-value" style="color: ${cat === 'anime' ? '#ff9800' : 'var(--color-accent-blue)'}">${categoryCounts[cat]}</span>
+                        <span class="stat-label">${cat.charAt(0).toUpperCase() + cat.slice(1)}</span>
+                    `;
+                    categoryStatsGrid.appendChild(box);
+                });
+            };
+
+            // --- EVENT LISTENERS ---
+
+            // 1. Admin/Login Toggle
+            loginToggleBtn.addEventListener('click', () => {
+                loginModal.style.display = 'block';
+                loginErrorMessage.textContent = '';
+                adminPasswordInput.value = '';
+            });
+
+            logoutToggleBtn.addEventListener('click', () => {
+                if (confirm("Haqiqatan ham Admin Paneldan chiqmoqchimisiz?")) {
+                    frontendContainer.style.display = 'block';
+                    adminPanel.style.display = 'none';
+                    document.body.style.paddingTop = '80px';
+                    renderContentCards('all');
+                }
+            });
+
+            loginCloseBtn.addEventListener('click', () => { loginModal.style.display = 'none'; });
+
+            // 2. Admin Login Submission
+            adminLoginForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                if (adminPasswordInput.value === ADMIN_PASSWORD) {
+                    loginModal.style.display = 'none';
+                    frontendContainer.style.display = 'none';
+                    adminPanel.style.display = 'block';
+                    // Admin panelda sticky nav yo'qligi uchun paddingni olib tashlash
+                    document.body.style.paddingTop = '0'; 
+                    updateDashboardStats();
+                    renderAdminTable();
+                } else {
+                    loginErrorMessage.textContent = 'Xato parol. Iltimos, qayta urinib ko\'ring.';
+                }
+            });
+
+            // 3. Admin Nav Tabs
+            adminNavBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    adminNavBtns.forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                    
+                    document.querySelectorAll('.admin-section').forEach(section => {
+                        section.classList.remove('active');
+                    });
+
+                    document.getElementById(`admin-${e.target.getAttribute('data-target')}`).classList.add('active');
+
+                    if (e.target.getAttribute('data-target') === 'manage') {
+                        renderAdminTable();
+                    }
+                });
+            });
+
+            // 4. Content Upload Form Submission
+            uploadForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const newContent = {
+                    id: contentDB.length > 0 ? Math.max(...contentDB.map(c => c.id)) + 1 : 1,
+                    type: document.getElementById('upload-type').value,
+                    title: document.getElementById('upload-title').value,
+                    description: document.getElementById('upload-description').value,
+                    posterUrl: document.getElementById('upload-poster').value,
+                    videoUrl: document.getElementById('upload-video').value,
+                    year: parseInt(document.getElementById('upload-year').value),
+                    duration: parseInt(document.getElementById('upload-duration').value),
+                    quality: document.getElementById('upload-quality').value,
+                    rating: parseFloat(document.getElementById('upload-rating').value),
+                    views: 0,
+                };
+
+                contentDB.push(newContent);
+                saveDB();fetch("/api/add", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(newContent)
+})
+.then(res => res.json())
+.then(() => {
+    contentDB.push(newContent);
+    uploadForm.reset();
+    document.getElementById('upload-message').textContent =
+        `Kontent: "${newContent.title}" muvaffaqiyatli yuklandi!`;
+    document.getElementById('upload-message').style.color = 'var(--color-green)';
+    renderContentCards("all");
+    updateDashboardStats();
+    renderAdminTable();
+});
+
+                uploadForm.reset();
+                document.getElementById('upload-message').textContent = `Kontent: "${newContent.title}" muvaffaqiyatli yuklandi!`;
+                document.getElementById('upload-message').style.color = 'var(--color-green)';
+                updateDashboardStats();
+                renderContentCards(newContent.type);
+            });
+
+            // 5. Frontend Navigation Filtering
+            document.querySelectorAll('.main-menu a').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    document.querySelectorAll('.main-menu a').forEach(l => l.classList.remove('active'));
+                    e.currentTarget.classList.add('active');
+                    const filter = e.currentTarget.getAttribute('data-filter');
+                    renderContentCards(filter);
+                });
+            });
+
+            // 6. Tizim Asboblari (Simulyatsiya)
+            document.getElementById('cache-clear-btn').addEventListener('click', () => {
+                alert("Cache muvaffaqiyatli tozalandi (Simulyatsiya).");
+            });
+
+            document.getElementById('db-backup-btn').addEventListener('click', () => {
+                alert(`Ma'lumotlar bazasi zaxira nusxasi olindi. Jami ${contentDB.length} kontent. (Simulyatsiya)`);
+            });
+
+            document.getElementById('reset-data-btn').addEventListener('click', () => {
+                if (confirm("DIQQAT! Barcha kontentni o'chirishni tasdiqlaysizmi?")) {
+                    localStorage.removeItem('medie_content_db');
+                    contentDB = []; // Ma'lumotlar bazasini tozalash
+                    alert("Barcha ma'lumotlar o'chirildi. Ilovani qayta yuklang.");
+                    location.reload();
+                }
+            });
+            
+            // 7. Video Modal Close
+            videoCloseBtn.addEventListener('click', closeVideoPlayer);
+            window.addEventListener('click', (e) => {
+                if (e.target === videoModal) closeVideoPlayer();
+                if (e.target === loginModal) loginModal.style.display = 'none';
+            });
+
+            // --- INITIALIZATION ---
+            renderContentCards('all'); // Frontendni yuklash
+        });
+    </script>
+</body>
+</html>
